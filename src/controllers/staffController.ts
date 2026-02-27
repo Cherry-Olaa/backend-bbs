@@ -104,15 +104,7 @@ export async function getStaffDashboardStats(
         term: r.term,
       }));
        
-    // const recentResults = recentResultsRaw.map((r) => ({
-    //   _id: r._id.toString(),
-    //   studentName: `${r.studentId.firstName} ${
-    //     r.studentId.lastName || ""
-    //   }`.trim(),
-    //   admissionNumber: r.studentId.admissionNumber,
-    //   session: r.session,
-    //   term: r.term,
-    // }));
+
 
     return res.json({
       myStudents: students.length,
@@ -124,6 +116,11 @@ export async function getStaffDashboardStats(
     return res.status(500).json({ message: "Server error" });
   }
 }
+
+
+
+
+
 // import { Types } from "mongoose";
 // import { Request, Response } from "express";
 // import User from "../models/User";

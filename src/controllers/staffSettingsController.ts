@@ -9,12 +9,21 @@ export async function getStaffProfile(req: AuthRequest, res: Response) {
     if (!req.user)
       return res.status(401).json({ message: "Not authenticated" });
 
+    // ✅ FIX: Include assignedClasses in the selection
     const user = await User.findById(req.user.id).select(
-      "_id fullName username role"
+      "_id fullName username role assignedClasses" // Added assignedClasses
     );
+    
     if (!user) return res.status(404).json({ message: "Staff not found" });
 
-    return res.json(user);
+    // ✅ Return the user object with all fields
+    return res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      role: user.role,
+      assignedClasses: user.assignedClasses || [] // Ensure it's always an array
+    });
   } catch (err: any) {
     console.error("Get Staff Profile Error:", err);
     return res.status(500).json({ message: "Server error" });
@@ -31,11 +40,11 @@ export async function updateStaffProfile(req: AuthRequest, res: Response) {
       return res.status(400).json({ message: "Current password is required" });
 
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "Staff not found" }); // verify current password
+    if (!user) return res.status(404).json({ message: "Staff not found" });
 
     const valid = await comparePassword(currentPassword, user.passwordHash);
     if (!valid)
-      return res.status(401).json({ message: "Current password is incorrect" }); // update fields
+      return res.status(401).json({ message: "Current password is incorrect" });
 
     if (fullName) user.fullName = fullName;
     if (username) user.username = username;
@@ -53,6 +62,7 @@ export async function updateStaffProfile(req: AuthRequest, res: Response) {
         fullName: user.fullName,
         username: user.username,
         role: user.role,
+        assignedClasses: user.assignedClasses || []
       },
     });
   } catch (err: any) {

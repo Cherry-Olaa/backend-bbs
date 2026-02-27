@@ -5,23 +5,14 @@ import StudentModel from "../models/Student";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
-// ✅ Strongly typed payload for authenticated requests
-// export interface UserPayload {
-//     id: string;
-//     role: "admin" | "staff" | "student";
-//     fullName?: string;
-//     admissionNumber?: string;
-// }
-
 export interface UserPayload {
   id: string;
   role: "admin" | "staff" | "student";
   fullName?: string;
   admissionNumber?: string;
-  assignedClasses?: string[]; // <-- Add this
+  assignedClasses?: string[];
 }
 
-// ✅ Extended Request type
 export interface AuthRequest extends Request {
   user?: UserPayload;
 }
@@ -35,6 +26,7 @@ export const authenticate = async (
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: "No token" });
+    
     const token = authHeader.split(" ")[1];
     const payload: any = jwt.verify(token, JWT_SECRET);
     if (!payload) return res.status(401).json({ message: "Invalid token" });
@@ -51,8 +43,14 @@ export const authenticate = async (
       };
     } else if (payload.role === "student") {
       const student = await StudentModel.findById(payload.id).lean();
-      if (!student)
-        return res.status(401).json({ message: "Student not found" });
+      if (!student) return res.status(401).json({ message: "Student not found" });
+
+      // ✅ Check if student is active
+      if (student.isActive === false) {
+        return res.status(403).json({ 
+          message: "Account deactivated. Please contact administration." 
+        });
+      }
 
       req.user = {
         id: student._id.toString(),
@@ -62,6 +60,7 @@ export const authenticate = async (
     } else {
       return res.status(401).json({ message: "Invalid role" });
     }
+    
     next();
   } catch (err: any) {
     return res

@@ -1,44 +1,42 @@
+// routes/resultRoutes.ts
 import { Router } from "express";
 import multer from "multer";
 import {
   upsertResult,
   getStudentResults,
-  generatePdf
+  getAllResults,
+  deleteResult,
+  uploadExcel
 } from "../controllers/resultController";
 import { authenticate, authorize } from "../middleware/authMiddleware";
 
 const upload = multer({ dest: process.env.UPLOAD_DIR || "uploads" });
-
 const router = Router();
 
-// Staff/Admin/HOD/Principal can create/update results
+// Get results by studentId query parameter
+router.get("/", authenticate, async (req, res) => {
+  const { studentId } = req.query;
+  if (studentId) {
+    // Forward to getStudentResults
+    req.params.studentId = studentId as string;
+    return getStudentResults(req, res);
+  }
+  return getAllResults(req, res);
+});
+
+// Staff/Admin can create/update results
 router.post("/", authenticate, authorize(["staff", "admin"]), upsertResult);
 
-// Students & staff can view results
-router.get("/", authenticate, authorize(["student", "staff", "admin"]), getStudentResults);
+// Get all results with filters (for admin/staff)
+router.get("/all", authenticate, authorize(["staff", "admin"]), getAllResults);
 
-// Generate PDF (WAEC-style report card)
-router.get("/pdf", authenticate, authorize(["student", "staff", "admin"]), generatePdf);
+// Students & staff can view specific student results by param
+router.get("/student/:studentId", authenticate, authorize(["student", "staff", "admin"]), getStudentResults);
+
+// Delete result (admin/staff only)
+router.delete("/:id", authenticate, authorize(["staff", "admin"]), deleteResult);
+
+// Excel upload
+router.post("/excel", authenticate, authorize(["staff", "admin"]), upload.single("file"), uploadExcel);
 
 export default router;
-
-// import { Router } from "express";
-// import multer from "multer";
-// import {
-//   upsertResult,
-//   getStudentResults,
-//   uploadExcel,
-//   generatePdf
-// } from "../controllers/resultController";
-// import { authenticate, authorize } from "../middleware/authMiddleware";
-
-// const upload = multer({ dest: process.env.UPLOAD_DIR || "uploads" });
-
-// const router = Router();
-
-// router.post("/", authenticate, authorize(["staff","admin","hod","principal"]), upsertResult);
-// router.post("/upload", authenticate, authorize(["staff","admin","hod","principal"]), upload.single("file"), uploadExcel);
-// router.get("/", authenticate, authorize(["student","staff","admin","hod","principal"]), getStudentResults);
-// router.get("/pdf", authenticate, authorize(["student","staff","admin","hod","principal"]), generatePdf);
-
-// export default router;

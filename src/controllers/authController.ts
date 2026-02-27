@@ -13,17 +13,29 @@ import {
  * Student + Staff/Admin Login
  */
 export async function login(req: Request, res: Response) {
-    const { admissionNumber, username, password } = req.body; // -------------------- STUDENT LOGIN --------------------
+    const { admissionNumber, username, password } = req.body;
 
+    // -------------------- STUDENT LOGIN --------------------
     if (admissionNumber) {
         const student = (await Student.findOne({
             admissionNumber,
         })) as IStudent | null;
-        if (!student)
+        
+        if (!student) {
             return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        // ✅ Check if student is active
+        if (student.isActive === false) {
+            return res.status(403).json({ 
+                message: "Your account has been deactivated. Please contact the school administration." 
+            });
+        }
 
         const valid = await comparePassword(password, student.passwordHash);
-        if (!valid) return res.status(401).json({ message: "Invalid credentials" });
+        if (!valid) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
 
         const payload: JWTPayload = {
             id: student._id.toString(),
@@ -43,9 +55,11 @@ export async function login(req: Request, res: Response) {
             role: "student",
             id: student._id,
             name: student.firstName,
+            isActive: student.isActive, // Include active status
         });
-    } // -------------------- STAFF / ADMIN LOGIN --------------------
+    }
 
+    // -------------------- STAFF / ADMIN LOGIN --------------------
     if (!username) {
         return res
             .status(400)
@@ -53,10 +67,14 @@ export async function login(req: Request, res: Response) {
     }
 
     const user = (await User.findOne({ username })) as IUser | null;
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const ok = await comparePassword(password, user.passwordHash);
-    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    if (!ok) {
+        return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const payload: JWTPayload = {
         id: user._id.toString(),
@@ -92,8 +110,16 @@ export async function refreshToken(req: Request, res: Response) {
 
         if (payload.role === "student") {
             const student = (await Student.findById(payload.id)) as IStudent | null;
-            if (!student || student.refreshToken !== token)
+            if (!student || student.refreshToken !== token) {
                 return res.status(401).json({ message: "Invalid token" });
+            }
+
+            // ✅ Check if student is still active when refreshing token
+            if (student.isActive === false) {
+                return res.status(403).json({ 
+                    message: "Account has been deactivated. Please contact administration." 
+                });
+            }
 
             const newPayload: JWTPayload = {
                 id: student._id.toString(),
@@ -111,8 +137,9 @@ export async function refreshToken(req: Request, res: Response) {
         }
 
         const user = (await User.findById(payload.id)) as IUser | null;
-        if (!user || user.refreshToken !== token)
+        if (!user || user.refreshToken !== token) {
             return res.status(401).json({ message: "Invalid token" });
+        }
 
         const newPayload: JWTPayload = {
             id: user._id.toString(),

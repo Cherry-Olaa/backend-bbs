@@ -34,39 +34,47 @@
 // router.post("/result/single", upsertResult);
 // router.post("/result/multiple", upsertResult);
 // router.post("/result/excel", upload.single("file"), uploadExcel);
-
-// export default router;
+// routes/index.ts
 import { Router } from "express";
 import authRoutes from "./authRoutes";
 import studentRoutes from "./studentRoutes";
-import staffRoutes from "./staffRoutes"; // <-- merged
+import staffRoutes from "./staffRoutes";
 import classRoutes from "./classRoutes";
 import subjectRoutes from "./subjectRoutes";
 import resultRoutes from "./resultRoutes";
+import subjectRegistrationRoutes from "./subjectRegistrationRoutes";
+import adminRoutes from "./adminRoutes";
 import { upsertResult, uploadExcel } from "../controllers/resultController";
 import upload from "../utils/multer";
+import { authenticate } from "../middleware/authMiddleware"; // 👈 ADD THIS IMPORT
 
 const router = Router();
 
-// Auth
+// Auth routes
 router.use("/auth", authRoutes);
 
-// Students
+// Admin routes
+router.use("/admin", adminRoutes);
+
+// Student routes
 router.use("/students", studentRoutes);
 
-// Staff (including results)
+// Staff routes
 router.use("/staff", staffRoutes);
 
-// Classes & Subjects
+// Class & Subject routes
 router.use("/classes", classRoutes);
 router.use("/subjects", subjectRoutes);
 
-// Admin result upload
+// Result routes (admin)
 router.use("/results", resultRoutes);
 
-// New upload routes
-router.post("/result/single", upsertResult);
-router.post("/result/multiple", upsertResult);
-router.post("/result/excel", upload.single("file"), uploadExcel);
+// Subject Registration routes
+router.use("/subject-registrations", subjectRegistrationRoutes);
+
+// Additional result upload routes - 👈 ADD AUTHENTICATION HERE
+router.post("/result/single", authenticate, upsertResult);      // Added authenticate
+router.post("/result/multiple", authenticate, upsertResult);    // Added authenticate
+router.post("/result/excel", authenticate, upload.single("file"), uploadExcel); // Added authenticate
 
 export default router;
