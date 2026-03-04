@@ -48,6 +48,8 @@ import { upsertResult, uploadExcel } from "../controllers/resultController";
 import upload from "../utils/multer";
 import { authenticate } from "../middleware/authMiddleware"; // 👈 ADD THIS IMPORT
 import jobRoutes from "./jobRoutes"; 
+// routes/index.ts
+import contactRoutes from "./contactRoutes";
 
 
 const router = Router();
@@ -79,4 +81,6 @@ router.post("/result/single", authenticate, upsertResult);      // Added authent
 router.post("/result/multiple", authenticate, upsertResult);    // Added authenticate
 router.post("/result/excel", authenticate, upload.single("file"), uploadExcel); // Added authenticate
 
+// Add this line with your other routes
+router.use("/contact", contactRoutes);
 export default router;

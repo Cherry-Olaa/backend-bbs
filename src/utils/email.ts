@@ -383,6 +383,10 @@ export async function sendNewJobNotification(
     return false;
   }
 }
+// utils/email.ts - Updated sendContactFormEmail function
+// utils/email.ts - Update the sendContactFormEmail function
+// utils/email.ts - Updated sendContactFormEmail function
+// utils/email.ts - Simplified contact form email
 
 // Contact form email
 export async function sendContactFormEmail(
@@ -391,39 +395,131 @@ export async function sendContactFormEmail(
   message: string
 ): Promise<boolean> {
   try {
+    console.log("📧 Attempting to send contact form email...");
+    console.log("To:", process.env.ADMIN_EMAIL || 'contactbusybrain@gmail.com');
+    console.log("From: info@busybrainschools.com");
+    console.log("Reply-To:", email);
+    console.log("Name:", name);
+
+    // Validate inputs
+    if (!name || !email || !message) {
+      console.error("❌ Missing required fields:", { name, email, message });
+      return false;
+    }
+
     const { data, error } = await resend.emails.send({
-      from: 'BUSY BRAIN SCHOOLS Contact <contact@busybrainschools.com>',
-      to: [process.env.ADMIN_EMAIL || 'info@busybrainschools.com'],
+      from: 'BUSY BRAIN SCHOOLS <info@busybrainschools.com>',
+      to: [process.env.ADMIN_EMAIL || 'contactbusybrain@gmail.com'],
       replyTo: email,
-      subject: `📬 New Contact Form Message from ${name}`,
+      subject: `📬 New message from ${name} via Contact Form`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Contact Form Message</title>
           <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 20px auto; background: white; padding: 30px; border-radius: 10px; }
-            .field { margin: 15px 0; }
-            .label { font-weight: bold; color: #666; }
-            .message-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              line-height: 1.5;
+              color: #1a1a1a;
+              margin: 0;
+              padding: 0;
+              background-color: #f5f5f5;
+            }
+            .email-container {
+              max-width: 500px;
+              margin: 20px auto;
+              background: white;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            .header {
+              background: #fbbf24;
+              padding: 16px 24px;
+            }
+            .header h2 {
+              margin: 0;
+              color: white;
+              font-size: 18px;
+              font-weight: 500;
+            }
+            .content {
+              padding: 24px;
+            }
+            .field {
+              margin-bottom: 20px;
+            }
+            .label {
+              font-size: 12px;
+              color: #666;
+              margin-bottom: 4px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .value {
+              font-size: 15px;
+              color: #1a1a1a;
+              background: #f9f9f9;
+              padding: 10px 12px;
+              border-radius: 6px;
+              border-left: 3px solid #fbbf24;
+            }
+            .message-value {
+              font-size: 15px;
+              color: #1a1a1a;
+              background: #f9f9f9;
+              padding: 12px;
+              border-radius: 6px;
+              border-left: 3px solid #fbbf24;
+              white-space: pre-wrap;
+              line-height: 1.6;
+            }
+            .reply-hint {
+              margin-top: 24px;
+              padding: 12px;
+              background: #f0f9ff;
+              border-radius: 6px;
+              font-size: 13px;
+              color: #0369a1;
+            }
+            .footer {
+              margin-top: 24px;
+              padding-top: 16px;
+              border-top: 1px solid #eee;
+              font-size: 12px;
+              color: #999;
+              text-align: center;
+            }
           </style>
         </head>
         <body>
-          <div class="container">
-            <h2 style="color: #f59e0b;">📬 New Contact Form Submission</h2>
-            <div class="field">
-              <div class="label">Name:</div>
-              <div>${name}</div>
+          <div class="email-container">
+            <div class="header">
+              <h2>📬 New Contact Form Message</h2>
             </div>
-            <div class="field">
-              <div class="label">Email:</div>
-              <div>${email}</div>
+            
+            <div class="content">
+              <div class="field">
+                <div class="label">From</div>
+                <div class="value">${name} &lt;${email}&gt;</div>
+              </div>
+              
+              <div class="field">
+                <div class="label">Message</div>
+                <div class="message-value">${message.replace(/\n/g, '<br>')}</div>
+              </div>
+              
+              <div class="reply-hint">
+                <strong>✉️ Reply:</strong> Just hit reply - your response will go directly to ${email}
+              </div>
+              
+              <div class="footer">
+                Sent via BUSY BRAIN SCHOOLS contact form
+              </div>
             </div>
-            <div class="field">
-              <div class="label">Message:</div>
-              <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
-            </div>
-            <p style="margin-top: 20px;">You can reply directly to this email to respond to ${name}.</p>
           </div>
         </body>
         </html>
@@ -431,11 +527,17 @@ export async function sendContactFormEmail(
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error('❌ Resend error:', error);
       return false;
     }
 
-    console.log('✅ Contact form email sent:', data?.id);
+    console.log('✅ Contact form email sent successfully:', data?.id);
+    
+    // Log the preview URL if in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📬 Preview URL: https://resend.com/emails/${data.id}`);
+    }
+    
     return true;
   } catch (error) {
     console.error('❌ Error sending contact form email:', error);
