@@ -8,19 +8,28 @@ export interface IJobApplication extends Document {
   email: string;
   phone: string;
   address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
   resumeUrl: string;
   coverLetter?: string;
   portfolio?: string;
   linkedIn?: string;
-  experience: string;
+  
+  // New fields
   education: string;
+  courseOfStudy: string;
+  institutions: string[];
+  workExperience: string;
+  previousSchool?: string;
+  subjectsTaught: string[];
+  trcnCertification: string;
+  keyStrengths: string[];
   skills: string[];
+  
+  // Optional fields
   expectedSalary?: number;
   startDate?: Date;
   heardFrom?: string;
+  
+  // Status fields
   status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired';
   notes?: string;
   reviewedBy?: mongoose.Types.ObjectId;
@@ -31,24 +40,43 @@ export interface IJobApplication extends Document {
 
 const JobApplicationSchema = new mongoose.Schema<IJobApplication>({
   jobId: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true },
+  
+  // Basic Info
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
-  address: String,
-  city: String,
-  state: String,
-  country: { type: String, default: 'Nigeria' },
-  resumeUrl: { type: String, required: true },
-  coverLetter: String,
-  portfolio: String,
-  linkedIn: String,
-  experience: { type: String, required: true },
+  address: { type: String },
+  
+  // Education
   education: { type: String, required: true },
+  courseOfStudy: { type: String, required: true },
+  institutions: [{ type: String, required: true }],
+  
+  // Professional Experience
+  workExperience: { type: String, required: true },
+  previousSchool: { type: String },
+  subjectsTaught: [{ type: String, required: true }],
+  
+  // Professional Qualifications
+  trcnCertification: { type: String, required: true },
+  keyStrengths: [{ type: String, required: true }],
+  
+  // Additional Info
   skills: [{ type: String }],
+  coverLetter: { type: String },
+  portfolio: { type: String },
+  linkedIn: { type: String },
+  
+  // Files
+  resumeUrl: { type: String, required: true },
+  
+  // Optional Fields
   expectedSalary: Number,
   startDate: Date,
   heardFrom: String,
+  
+  // Status
   status: { 
     type: String, 
     enum: ['pending', 'reviewed', 'shortlisted', 'rejected', 'hired'],
@@ -59,8 +87,11 @@ const JobApplicationSchema = new mongoose.Schema<IJobApplication>({
   reviewedAt: Date
 }, { timestamps: true });
 
-// Index for searching applications
+// Indexes for searching
 JobApplicationSchema.index({ email: 1, jobId: 1 });
 JobApplicationSchema.index({ status: 1 });
+JobApplicationSchema.index({ education: 1 });
+JobApplicationSchema.index({ workExperience: 1 });
+JobApplicationSchema.index({ trcnCertification: 1 });
 
 export default mongoose.model<IJobApplication>("JobApplication", JobApplicationSchema);
