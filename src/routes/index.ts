@@ -50,6 +50,8 @@ import { authenticate } from "../middleware/authMiddleware"; // 👈 ADD THIS IM
 import jobRoutes from "./jobRoutes"; 
 // routes/index.ts
 import contactRoutes from "./contactRoutes";
+import gameRoutes from "./gameRoutes";
+
 
 
 const router = Router();
@@ -80,7 +82,7 @@ router.use("/jobs", jobRoutes);
 router.post("/result/single", authenticate, upsertResult);      // Added authenticate
 router.post("/result/multiple", authenticate, upsertResult);    // Added authenticate
 router.post("/result/excel", authenticate, upload.single("file"), uploadExcel); // Added authenticate
-
+router.use("/games", gameRoutes);
 // Add this line with your other routes
 router.use("/contact", contactRoutes);
 export default router;

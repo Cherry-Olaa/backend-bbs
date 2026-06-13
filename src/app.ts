@@ -7,6 +7,7 @@ import "express-async-errors";
 import { errorHandler } from "./middleware/errorMiddleware";
 import fs from "fs";
 import path from "path";
+// routes/index.ts (add this line with other routes)
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "uploads";
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
